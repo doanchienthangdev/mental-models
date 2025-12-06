@@ -24,7 +24,9 @@ type FetchOptions = {
   sort?: "recent" | "oldest";
 };
 
-export async function fetchModels(options: FetchOptions = {}) {
+export async function fetchModels(
+  options: FetchOptions = {},
+): Promise<{ data: ModelRecord[]; count: number }> {
   const {
     status,
     statuses,
@@ -73,17 +75,17 @@ export async function fetchModels(options: FetchOptions = {}) {
     throw new Error(error.message);
   }
   return {
-    data: data ?? [],
+    data: (data ?? []) as ModelRecord[],
     count: typeof count === "number" ? count : data?.length ?? 0,
   };
 }
 
-export async function fetchModelBySlug(slug: string) {
+export async function fetchModelBySlug(slug: string): Promise<ModelRecord> {
   const { data, error } = await supabase.from("models").select("*").eq("slug", slug).single();
   if (error) {
     throw new Error(error.message);
   }
-  return data;
+  return data as ModelRecord;
 }
 
 export async function listModelStatuses() {
@@ -100,7 +102,7 @@ export async function listModelStatuses() {
   return Array.from(unique);
 }
 
-export async function createModelEntry(input: ModelInput) {
+export async function createModelEntry(input: ModelInput): Promise<ModelRecord> {
   if (!supabaseAdmin) {
     throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
   }
@@ -119,5 +121,5 @@ export async function createModelEntry(input: ModelInput) {
   if (error) {
     throw new Error(error.message);
   }
-  return data;
+  return data as ModelRecord;
 }
