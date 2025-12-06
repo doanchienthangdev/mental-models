@@ -12,15 +12,19 @@ async function upsertRelations(modelId: string, categoryIds?: string[], tagIds?:
   if (!supabaseAdmin) throw new Error("Missing service role key");
   if (categoryIds && categoryIds.length > 0) {
     const rows: ModelCategoryRow[] = categoryIds.map((category_id) => ({ model_id: modelId, category_id }));
-    await supabaseAdmin.from("model_categories").upsert(rows as Database["public"]["Tables"]["model_categories"]["Insert"][], {
-      onConflict: "model_id,category_id",
-    });
+    await supabaseAdmin
+      .from<Database["public"]["Tables"]["model_categories"]["Insert"]>("model_categories")
+      .upsert(rows, {
+        onConflict: "model_id,category_id",
+      });
   }
   if (tagIds && tagIds.length > 0) {
     const rows: ModelTagRow[] = tagIds.map((tag_id) => ({ model_id: modelId, tag_id }));
-    await supabaseAdmin.from("model_tags").upsert(rows as Database["public"]["Tables"]["model_tags"]["Insert"][], {
-      onConflict: "model_id,tag_id",
-    });
+    await supabaseAdmin
+      .from<Database["public"]["Tables"]["model_tags"]["Insert"]>("model_tags")
+      .upsert(rows, {
+        onConflict: "model_id,tag_id",
+      });
   }
 }
 
