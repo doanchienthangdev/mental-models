@@ -41,6 +41,9 @@ PROJECT_PLAN.md
 UI_SPECS.md
 VIBE_OS.md
 
+# database migrations (handled separately, not pushed)
+supabase/
+
 # vercel
 .vercel
 
