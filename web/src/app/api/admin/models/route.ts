@@ -9,22 +9,21 @@ type ModelCategoryRow = Database["public"]["Tables"]["model_categories"]["Insert
 type ModelTagRow = Database["public"]["Tables"]["model_tags"]["Insert"];
 
 async function upsertRelations(modelId: string, categoryIds?: string[], tagIds?: string[]) {
-  if (!supabaseAdmin) throw new Error("Missing service role key");
+  const admin = supabaseAdmin;
+  if (!admin) throw new Error("Missing service role key");
   if (categoryIds && categoryIds.length > 0) {
-    const rows: ModelCategoryRow[] = categoryIds.map((category_id) => ({ model_id: modelId, category_id }));
-    await supabaseAdmin
-      .from("model_categories")
-      .upsert(rows as ModelCategoryRow[], {
-        onConflict: "model_id,category_id",
-      });
+    const rows: ModelCategoryRow[] = categoryIds.map(
+      (category_id): ModelCategoryRow => ({ model_id: modelId, category_id }),
+    );
+    await admin.from("model_categories").upsert(rows, {
+      onConflict: "model_id,category_id",
+    });
   }
   if (tagIds && tagIds.length > 0) {
-    const rows: ModelTagRow[] = tagIds.map((tag_id) => ({ model_id: modelId, tag_id }));
-    await supabaseAdmin
-      .from("model_tags")
-      .upsert(rows as ModelTagRow[], {
-        onConflict: "model_id,tag_id",
-      });
+    const rows: ModelTagRow[] = tagIds.map((tag_id): ModelTagRow => ({ model_id: modelId, tag_id }));
+    await admin.from("model_tags").upsert(rows, {
+      onConflict: "model_id,tag_id",
+    });
   }
 }
 
