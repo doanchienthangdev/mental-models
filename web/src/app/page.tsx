@@ -112,12 +112,16 @@ export default async function HomePage() {
             <p className="text-lg text-slate-200">
               A personal library to structure your thoughts, discover new frameworks, and improve your decision-making process.
             </p>
-            <div className="flex flex-wrap gap-3 min-[360px]:flex-nowrap w-full">
-              <Button asChild className={primary3d}>
-                <Link href="/library">Browse Library</Link>
+            <div className="flex flex-wrap gap-3 w-full flex-col sm:flex-row">
+              <Button asChild className={`${primary3d} w-full sm:w-auto`}>
+                <Link href="/library" className="whitespace-nowrap">
+                  Browse{"\u00A0"}Library
+                </Link>
               </Button>
-              <Button asChild className={outline3d}>
-                <Link href="/#how-it-works">How It Works</Link>
+              <Button asChild className={`${outline3d} w-full sm:w-auto`}>
+                <Link href="/#how-it-works" className="whitespace-nowrap">
+                  How It Works
+                </Link>
               </Button>
             </div>
           </div>
