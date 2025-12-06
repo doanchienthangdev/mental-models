@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { Database } from "@/lib/supabase/types";
-import { supabaseAdmin } from "@/lib/supabase/client";
+import { getSupabaseAdminClient } from "@/lib/supabase/client";
 import jwt from "jsonwebtoken";
 import { env } from "@/lib/env";
 import crypto from "crypto";
@@ -19,8 +19,8 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { email, password } = body;
-    if (!supabaseAdmin) throw new Error("Missing service role key");
-    const { data: user, error } = await supabaseAdmin
+    const admin = getSupabaseAdminClient();
+    const { data: user, error } = await admin
       .from("users")
       .select("*")
       .eq("email", email)

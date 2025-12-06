@@ -1,5 +1,5 @@
 import type { Database } from "./supabase/types";
-import { supabase, supabaseAdmin } from "./supabase/client";
+import { supabase, getSupabaseAdminClient } from "./supabase/client";
 
 export type ModelRecord = Database["public"]["Tables"]["models"]["Row"];
 
@@ -103,9 +103,7 @@ export async function listModelStatuses() {
 }
 
 export async function createModelEntry(input: ModelInput): Promise<ModelRecord> {
-  if (!supabaseAdmin) {
-    throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
-  }
+  const admin = getSupabaseAdminClient();
   const payload: Database["public"]["Tables"]["models"]["Insert"] = {
     title: input.title,
     slug: input.slug,
@@ -117,7 +115,7 @@ export async function createModelEntry(input: ModelInput): Promise<ModelRecord> 
     status: "published",
     audio_status: "idle",
   };
-  const { data, error } = await supabaseAdmin.from("models").insert(payload).select().single();
+  const { data, error } = await admin.from("models").insert(payload).select().single();
   if (error) {
     throw new Error(error.message);
   }

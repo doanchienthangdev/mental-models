@@ -1,4 +1,4 @@
-import { supabase, supabaseAdmin } from "./supabase/client";
+import { supabase, getSupabaseAdminClient } from "./supabase/client";
 import type { Database } from "./supabase/types";
 
 export type Category = Database["public"]["Tables"]["categories"]["Row"];
@@ -28,22 +28,22 @@ export async function listTags(): Promise<Tag[]> {
 }
 
 export async function createCategory(input: Database["public"]["Tables"]["categories"]["Insert"]) {
-  if (!supabaseAdmin) throw new Error("Missing service role key");
-  const { data, error } = await supabaseAdmin.from("categories").insert(input).select().single();
+  const admin = getSupabaseAdminClient();
+  const { data, error } = await admin.from("categories").insert(input).select().single();
   if (error) throw new Error(error.message);
   return data;
 }
 
 export async function updateCategory(id: string, input: Database["public"]["Tables"]["categories"]["Update"]) {
-  if (!supabaseAdmin) throw new Error("Missing service role key");
-  const { data, error } = await supabaseAdmin.from("categories").update(input).eq("id", id).select().single();
+  const admin = getSupabaseAdminClient();
+  const { data, error } = await admin.from("categories").update(input).eq("id", id).select().single();
   if (error) throw new Error(error.message);
   return data;
 }
 
 export async function deleteCategory(id: string) {
-  if (!supabaseAdmin) throw new Error("Missing service role key");
-  const { error } = await supabaseAdmin.from("categories").delete().eq("id", id);
+  const admin = getSupabaseAdminClient();
+  const { error } = await admin.from("categories").delete().eq("id", id);
   if (error) throw new Error(error.message);
   return true;
 }
