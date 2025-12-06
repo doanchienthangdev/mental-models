@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { Database } from "@/lib/supabase/types";
 import { supabaseAdmin } from "@/lib/supabase/client";
 import jwt from "jsonwebtoken";
 import { env } from "@/lib/env";
@@ -19,7 +20,11 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { email, password } = body;
     if (!supabaseAdmin) throw new Error("Missing service role key");
-    const { data: user, error } = await supabaseAdmin.from("users").select("*").eq("email", email).single();
+    const { data: user, error } = await supabaseAdmin
+      .from("users")
+      .select("*")
+      .eq("email", email)
+      .single<Database["public"]["Tables"]["users"]["Row"]>();
     if (error || !user) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
