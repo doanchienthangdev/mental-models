@@ -8,6 +8,8 @@ import { listTags } from "@/lib/tags";
 import { cn } from "@/lib/utils";
 import { BookOpen, Headphones, PlusCircle, RefreshCw } from "lucide-react";
 import { HeroGlobe } from "@/components/hero-globe";
+import { HeroCtaButtons } from "@/components/hero-cta-buttons";
+import { FeaturedModelCard } from "@/components/featured-model-card";
 
 export const revalidate = 0;
 
@@ -47,51 +49,17 @@ export default async function HomePage() {
     const summary = truncateWords(model.summary ?? "", 20);
     const tagNames = (model.tags ?? []).map((id) => tagMap.get(id) || id);
     const categoryName = model.category ? catMap.get(model.category) || model.category : "General";
-    const label = statusLabel(model.audio_status);
+    const labelInfo = statusLabel(model.audio_status);
     return (
-      <Link
+      <FeaturedModelCard
         key={model.slug}
-        href={`/models/${model.slug}`}
-        className="group block overflow-hidden rounded-2xl border border-[#1e3442] bg-[#0f202d]/80 shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur transition hover:-translate-y-1 hover:shadow-[0_24px_70px_rgba(46,160,225,0.25)]"
-      >
-        <div className="relative h-[180px] w-full bg-[#0c1622]">
-          {model.cover_url ? (
-            <Image src={model.cover_url} alt={model.title} fill className="object-cover" sizes="(min-width: 1024px) 320px, 100vw" />
-          ) : (
-            <div className="h-full w-full bg-gradient-to-br from-slate-800 to-slate-900/60" />
-          )}
-          <div className="absolute left-3 top-3 flex gap-2">
-            {model.audio_status && (
-              <Badge variant={label.variant} className="bg-[#0f202d]/90">
-                {label.label}
-              </Badge>
-            )}
-          </div>
-          <div className="absolute right-3 top-3">
-            {model.status && (
-              <Badge variant="outline" className="bg-[#0f202d]/90 text-slate-100">
-                {model.status}
-              </Badge>
-            )}
-          </div>
-        </div>
-        <div className="space-y-3 px-4 pb-8 pt-4">
-          <h3 className="font-display text-lg font-semibold text-white group-hover:text-accent">{model.title}</h3>
-          <p className="text-sm text-slate-300">{summary}</p>
-          <div className="flex flex-wrap gap-2">
-            {tagNames.map((tag, idx) => (
-              <Badge key={`${tag}-${idx}`} variant="outline" className={cn(tagPalette[idx % tagPalette.length])}>
-                {tag}
-              </Badge>
-            ))}
-          </div>
-          <div className="flex items-center gap-3 text-sm text-slate-400">
-            <span>{categoryName}</span>
-            <span className="h-1 w-1 rounded-full bg-slate-500" />
-            <span>{model.read_time ? `${model.read_time} min read` : "—"}</span>
-          </div>
-        </div>
-      </Link>
+        model={model}
+        summary={summary}
+        tagNames={tagNames}
+        categoryName={categoryName}
+        tagPalette={tagPalette}
+        audioStatusLabel={labelInfo.label}
+      />
     );
   };
 
@@ -112,18 +80,7 @@ export default async function HomePage() {
             <p className="text-lg text-slate-200">
               A personal library to structure your thoughts, discover new frameworks, and improve your decision-making process.
             </p>
-            <div className="flex flex-wrap gap-3 w-full flex-col sm:flex-row">
-              <Button asChild className={`${primary3d} w-full sm:w-auto`}>
-                <Link href="/library" className="whitespace-nowrap">
-                  Browse{"\u00A0"}Library
-                </Link>
-              </Button>
-              <Button asChild className={`${outline3d} w-full sm:w-auto`}>
-                <Link href="/#how-it-works" className="whitespace-nowrap">
-                  How It Works
-                </Link>
-              </Button>
-            </div>
+            <HeroCtaButtons primaryHref="/library" secondaryHref="/#how-it-works" />
           </div>
           <div className="relative flex items-center justify-center">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_40%,rgba(46,160,225,0.22),transparent_45%),radial-gradient(circle_at_40%_60%,rgba(76,255,205,0.15),transparent_40%)] blur-3xl" />

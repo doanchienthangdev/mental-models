@@ -13,6 +13,18 @@ npm install
 npm run dev
 ```
 
+## Testing & TDD (Sprint 8)
+```bash
+npm run lint
+npm run test          # Vitest + React Testing Library (jsdom)
+npm run test -- --runInBand --coverage
+```
+Guidelines:
+- Every UI component with logic (CTA layout, cards, forms) must include a corresponding spec in `src/components/__tests__`.
+- Data helpers (e.g., Supabase wrappers) need unit tests that mock the client and cover success/error flows.
+- Coverage thresholds (set in `vitest.config.ts`) will fail CI if global lines/statements/functions drop below 60%.
+- Cross-reference new features in PRs with test cases and mention snapshots/fixtures when necessary.
+
 ## Environment Variables
 Copy `.env.example` to `.env.local` and fill in your own values.
 
