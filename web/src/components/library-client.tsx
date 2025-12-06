@@ -1,0 +1,533 @@
+"use client";
+
+import { useEffect, useMemo, useState, useTransition } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Search, Filter, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import type { ModelRecord } from "@/lib/models";
+import type { Category } from "@/lib/categories";
+import type { Tag } from "@/lib/tags";
+import { cn } from "@/lib/utils";
+
+type Props = {
+  models: ModelRecord[];
+  categories: Category[];
+  tags: Tag[];
+  totalCount: number;
+  pageSize: number;
+  initialSearchTerm?: string;
+  initialSelectedCategories?: string[];
+  initialSelectedTags?: string[];
+  initialSortOrder?: "recent" | "oldest";
+  initialPage?: number;
+};
+
+type FilterType = "category" | "tag" | null;
+
+const tagPalette = [
+  "bg-emerald-600/20 text-emerald-200 border-emerald-500/30",
+  "bg-sky-600/20 text-sky-200 border-sky-500/30",
+  "bg-purple-600/20 text-purple-200 border-purple-500/30",
+  "bg-rose-600/20 text-rose-200 border-rose-500/30",
+  "bg-amber-500/20 text-amber-200 border-amber-400/30",
+];
+
+export function LibraryClient({
+  models,
+  categories,
+  tags,
+  totalCount,
+  pageSize,
+  initialSearchTerm = "",
+  initialSelectedCategories = [],
+  initialSelectedTags = [],
+  initialSortOrder = "recent",
+  initialPage = 1,
+}: Props) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [searchInput, setSearchInput] = useState(initialSearchTerm);
+  const [currentSearchTerm, setCurrentSearchTerm] = useState(initialSearchTerm);
+  const [sortOrder, setSortOrder] = useState<"recent" | "oldest">(initialSortOrder);
+  const [activeFilter, setActiveFilter] = useState<FilterType>(null);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(initialSelectedCategories);
+  const [selectedTags, setSelectedTags] = useState<string[]>(initialSelectedTags);
+  const [pendingSelection, setPendingSelection] = useState<string[]>([]);
+  const [page, setPage] = useState(initialPage);
+
+  const categoryOptions = useMemo(() => categories.map((c) => ({ id: c.slug, label: c.name ?? c.slug })), [categories]);
+  const tagOptions = useMemo(() => tags.map((t) => ({ id: t.id, label: t.name ?? t.id })), [tags]);
+  const categoryNameMap = useMemo(() => new Map(categories.map((c) => [c.slug, c.name ?? c.slug])), [categories]);
+  const tagNameMap = useMemo(() => new Map(tags.map((t) => [t.id, t.name ?? t.id])), [tags]);
+
+  useEffect(() => {
+    setSearchInput(initialSearchTerm);
+  }, [initialSearchTerm]);
+
+  useEffect(() => {
+    setCurrentSearchTerm(initialSearchTerm);
+  }, [initialSearchTerm]);
+
+  useEffect(() => {
+    setSelectedCategories(initialSelectedCategories);
+  }, [initialSelectedCategories]);
+
+  useEffect(() => {
+    setSelectedTags(initialSelectedTags);
+  }, [initialSelectedTags]);
+
+  useEffect(() => {
+    setSortOrder(initialSortOrder);
+  }, [initialSortOrder]);
+
+  useEffect(() => {
+    setPage(initialPage);
+  }, [initialPage]);
+
+  const totalPages = Math.max(1, Math.ceil(Math.max(totalCount, 0) / pageSize));
+  const currentPage = Math.min(Math.max(page, 1), totalPages);
+  const showEmptyState = models.length === 0;
+
+  const openFilter = (type: FilterType) => {
+    if (!type) return;
+    setActiveFilter(type);
+    if (type === "category") setPendingSelection([...selectedCategories]);
+    if (type === "tag") setPendingSelection([...selectedTags]);
+  };
+
+  const closeFilter = () => {
+    setActiveFilter(null);
+    setPendingSelection([]);
+  };
+
+  const buildQuery = ({
+    search,
+    categories: nextCategories,
+    tags: nextTags,
+    sort,
+    page: nextPage,
+  }: {
+    search?: string;
+    categories?: string[];
+    tags?: string[];
+    sort?: "recent" | "oldest";
+    page?: number;
+  }) => {
+    const params = new URLSearchParams();
+    if (search) {
+      params.set("q", search);
+    }
+    (nextCategories ?? []).forEach((cat) => params.append("category", cat));
+    (nextTags ?? []).forEach((tag) => params.append("tag", tag));
+    if (sort && sort !== "recent") {
+      params.set("sort", sort);
+    }
+    if (nextPage && nextPage > 1) {
+      params.set("page", String(nextPage));
+    }
+    const qs = params.toString();
+    return qs ? `/library?${qs}` : "/library";
+  };
+
+  const commitFilters = (overrides: Partial<{ search: string; categories: string[]; tags: string[]; sort: "recent" | "oldest"; page: number }>) => {
+    const nextSearch = overrides.search !== undefined ? overrides.search : currentSearchTerm;
+    const nextCategories = overrides.categories ?? selectedCategories;
+    const nextTags = overrides.tags ?? selectedTags;
+    const nextSort = overrides.sort ?? sortOrder;
+    const shouldResetPage =
+      overrides.page === undefined &&
+      (overrides.search !== undefined || overrides.categories !== undefined || overrides.tags !== undefined || overrides.sort !== undefined);
+    const nextPage = overrides.page ?? (shouldResetPage ? 1 : currentPage);
+
+    setCurrentSearchTerm(nextSearch);
+    setSelectedCategories(nextCategories);
+    setSelectedTags(nextTags);
+    setSortOrder(nextSort);
+    setPage(nextPage);
+
+    const url = buildQuery({ search: nextSearch, categories: nextCategories, tags: nextTags, sort: nextSort, page: nextPage });
+    startTransition(() => {
+      router.push(url);
+    });
+  };
+
+  const applyFilter = () => {
+    if (activeFilter === "category") {
+      commitFilters({ categories: [...pendingSelection] });
+    }
+    if (activeFilter === "tag") {
+      commitFilters({ tags: [...pendingSelection] });
+    }
+    closeFilter();
+  };
+
+  const clearFilter = (type: FilterType) => {
+    if (type === "category") {
+      commitFilters({ categories: [] });
+    }
+    if (type === "tag") {
+      commitFilters({ tags: [] });
+    }
+  };
+
+  const currentOptions = activeFilter === "category" ? categoryOptions : activeFilter === "tag" ? tagOptions : [];
+
+  const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const trimmed = searchInput.trim();
+    setSearchInput(trimmed);
+    commitFilters({ search: trimmed, page: 1 });
+  };
+
+  const handleClearSearch = () => {
+    setSearchInput("");
+    commitFilters({ search: "" });
+  };
+
+  const renderBreadcrumb = () => (
+    <nav className="text-sm text-slate-400">
+      <Link href="/" className="text-accent hover:underline">
+        Home
+      </Link>
+      <span className="px-2">&gt;</span>
+      <span>Library</span>
+    </nav>
+  );
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-2">
+        {renderBreadcrumb()}
+        <h1 className="font-display text-4xl font-semibold text-white">Mental Models Library</h1>
+      </div>
+
+      <div className="flex flex-wrap gap-4">
+        <div className="flex-1 min-w-[260px] max-w-[420px]">
+          <div className="mb-2 text-xs font-medium uppercase tracking-[0.08em] text-slate-500">Search</div>
+          <form onSubmit={handleSearchSubmit}>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+              <Input
+                name="q"
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
+                placeholder="Search models..."
+                className="h-11 rounded-lg border-[#1e3442] bg-[#10202d] pl-10"
+              />
+            </div>
+          </form>
+        </div>
+        <div className="flex flex-1 min-w-[200px] gap-2">
+          <SelectBox label="Category" className="w-[180px]">
+            <FilterToggleButton
+              label={selectedCategories.length ? `${selectedCategories.length} selected` : "Categories"}
+              active={selectedCategories.length > 0}
+              onClick={() => openFilter("category")}
+              onClear={() => clearFilter("category")}
+            />
+          </SelectBox>
+          <SelectBox label="Tag" className="w-[180px]">
+            <FilterToggleButton
+              label={selectedTags.length ? `${selectedTags.length} selected` : "Tags"}
+              active={selectedTags.length > 0}
+              onClick={() => openFilter("tag")}
+              onClear={() => clearFilter("tag")}
+            />
+          </SelectBox>
+          <SelectBox label="Sort by" className="w-[200px] flex-1">
+            <select
+              className="h-11 w-full rounded-lg border border-[#1e3442] bg-[#10202d] px-4 text-slate-100"
+              value={sortOrder}
+              onChange={(event) => commitFilters({ sort: event.target.value as "recent" | "oldest" })}
+            >
+              <option value="recent">Recently Added</option>
+              <option value="oldest">Oldest</option>
+            </select>
+          </SelectBox>
+        </div>
+      </div>
+
+      {currentSearchTerm && (
+        <div className="flex flex-wrap items-center gap-3 text-sm text-slate-200">
+          <div className="flex items-center gap-2 rounded-full border border-accent/50 bg-accent/10 px-4 py-2">
+            <span className="font-medium text-white">Search:</span>
+            <span className="text-white">{currentSearchTerm}</span>
+            <span className="text-xs text-slate-300">({totalCount} results)</span>
+          </div>
+          <button
+            type="button"
+            onClick={handleClearSearch}
+            className="flex h-7 w-7 items-center justify-center rounded-full border border-accent/50 text-accent hover:bg-accent/10"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
+      <div className="flex flex-wrap gap-2 text-xs text-slate-400">
+        {selectedCategories.map((cat) => (
+          <span
+            key={`cat-${cat}`}
+            className="flex items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-accent"
+          >
+            {categoryNameMap.get(cat) ?? cat}
+            <button
+              type="button"
+              onClick={() => commitFilters({ categories: selectedCategories.filter((item) => item !== cat) })}
+              className="text-slate-100"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+        ))}
+        {selectedTags.map((tag) => (
+          <span
+            key={`tagChip-${tag}`}
+            className="flex items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-accent"
+          >
+            {tagNameMap.get(tag) ?? tag}
+            <button
+              type="button"
+              onClick={() => commitFilters({ tags: selectedTags.filter((item) => item !== tag) })}
+              className="text-slate-100"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+        ))}
+      </div>
+
+      {showEmptyState ? (
+        <div className="rounded-2xl border border-dashed border-[#1e3442] p-10 text-center text-slate-400">
+          No published models match your filters.
+        </div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {models.map((model) => (
+            <ModelCard key={model.id} model={model} tagPalette={tagPalette} tagMap={tagNameMap} categories={categoryNameMap} />
+          ))}
+        </div>
+      )}
+
+      <Pagination page={currentPage} totalPages={totalPages} onPageChange={(next) => commitFilters({ page: next })} disabled={isPending} />
+
+      {activeFilter && (
+        <FilterModal
+          title={activeFilter === "category" ? "Categories" : "Tags"}
+          options={currentOptions}
+          values={pendingSelection}
+          onChange={(next) => setPendingSelection(next)}
+          onClose={closeFilter}
+          onApply={applyFilter}
+        />
+      )}
+    </div>
+  );
+}
+
+function ModelCard({
+  model,
+  tagPalette,
+  tagMap,
+  categories,
+}: {
+  model: ModelRecord;
+  tagPalette: string[];
+  tagMap: Map<string, string>;
+  categories: Map<string, string | null>;
+}) {
+  const summary = truncateWords(model.summary ?? "", 20);
+  const tagNames = (model.tags ?? []).map((id) => tagMap.get(id) || id);
+  const categoryName = model.category ? categories.get(model.category) || model.category : "General";
+  return (
+    <Link
+      href={`/models/${model.slug}`}
+      className="group block overflow-hidden rounded-2xl border border-[#1e3442] bg-[#0f202d]/80 shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur transition hover:-translate-y-1 hover:shadow-[0_24px_70px_rgba(46,160,225,0.25)]"
+    >
+      <div className="relative h-[180px] w-full bg-[#0c1622]">
+        {model.cover_url ? (
+          <Image src={model.cover_url} alt={model.title} fill className="object-cover" sizes="(min-width: 1024px) 320px, 100vw" />
+        ) : (
+          <div className="h-full w-full bg-gradient-to-br from-slate-800 to-slate-900/50" />
+        )}
+      </div>
+      <div className="space-y-3 px-4 pb-8 pt-4">
+        <h3 className="font-display text-lg font-semibold text-white group-hover:text-accent">{model.title}</h3>
+        <p className="text-sm text-slate-300">{summary}</p>
+        <div className="flex flex-wrap gap-2">
+          {tagNames.map((tag, idx) => (
+            <Badge key={`${tag}-${idx}`} variant="outline" className={cn(tagPalette[idx % tagPalette.length])}>
+              {tag}
+            </Badge>
+          ))}
+        </div>
+        <div className="flex items-center gap-3 text-sm text-slate-400">
+          <span>{categoryName}</span>
+          <span className="h-1 w-1 rounded-full bg-slate-500" />
+          <span>{model.read_time ? `${model.read_time} min read` : "—"}</span>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function Pagination({
+  page,
+  totalPages,
+  onPageChange,
+  disabled,
+}: {
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="mt-10 flex items-center justify-between border-t border-[#1e3442] pt-4 text-sm text-slate-300">
+      <span>
+        Page {page} of {totalPages}
+      </span>
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          className="h-9 rounded-full border-[#1e3442] bg-[#10202d] text-slate-100"
+          disabled={page <= 1 || disabled}
+          onClick={() => onPageChange(Math.max(1, page - 1))}
+        >
+          <ChevronLeft className="mr-1 h-4 w-4" /> Previous
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="h-9 rounded-full border-[#1e3442] bg-[#10202d] text-slate-100"
+          disabled={page >= totalPages || disabled}
+          onClick={() => onPageChange(Math.min(totalPages, page + 1))}
+        >
+          Next <ChevronRight className="ml-1 h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function FilterModal({
+  title,
+  options,
+  values,
+  onChange,
+  onClose,
+  onApply,
+}: {
+  title: string;
+  options: { id: string; label: string }[];
+  values: string[];
+  onChange: (next: string[]) => void;
+  onClose: () => void;
+  onApply: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-6">
+      <div className="w-full max-w-md space-y-4 rounded-2xl border border-[#1e3442] bg-[#08131e] p-6 text-white shadow-2xl">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">{title}</h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-white">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="max-h-[320px] space-y-2 overflow-y-auto pr-2">
+          {options.map((option) => {
+            const checked = values.includes(option.id);
+            return (
+              <label
+                key={option.id}
+                className="flex cursor-pointer items-center justify-between rounded-lg border border-[#1e3442] bg-[#0f202d] px-3 py-2 text-sm hover:border-accent"
+              >
+                <span>{option.label}</span>
+                <input
+                  type="checkbox"
+                  className="h-4 w-4"
+                  checked={checked}
+                  onChange={(event) => {
+                    const next = event.target.checked
+                      ? [...values, option.id]
+                      : values.filter((id) => id !== option.id);
+                    onChange(next);
+                  }}
+                />
+              </label>
+            );
+          })}
+          {options.length === 0 && <p className="text-sm text-slate-400">No options available.</p>}
+        </div>
+        <div className="flex justify-end gap-3">
+          <Button variant="ghost" className="text-slate-200" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button className="bg-[#2ea0e1] text-slate-900 hover:bg-[#248bc5]" onClick={onApply}>
+            Apply
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SelectBox({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
+  return (
+    <div className={cn("w-full", className)}>
+      <div className="mb-2 text-xs font-medium uppercase tracking-[0.08em] text-slate-500">{label}</div>
+      {children}
+    </div>
+  );
+}
+
+function FilterToggleButton({
+  label,
+  active,
+  onClick,
+  onClear,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  onClear: () => void;
+}) {
+  return (
+    <div className="relative">
+      <Button
+        type="button"
+        variant="outline"
+        className={cn(
+          "h-11 w-full rounded-lg border-[#1e3442] bg-[#10202d] text-left text-slate-100",
+          active && "border-accent text-white",
+        )}
+        onClick={onClick}
+      >
+        <div className="flex items-center justify-between">
+          <span>{label}</span>
+          <Filter className="ml-2 h-4 w-4" />
+        </div>
+      </Button>
+      {active && (
+        <button
+          type="button"
+          onClick={onClear}
+          className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-slate-900"
+        >
+          <X className="h-3 w-3" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+function truncateWords(text: string, limit: number) {
+  const words = text.split(/\s+/);
+  if (words.length <= limit) return text;
+  return words.slice(0, limit).join(" ") + "...";
+}
