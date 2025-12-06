@@ -15,15 +15,17 @@ async function upsertRelations(modelId: string, categoryIds?: string[], tagIds?:
     const rows: ModelCategoryRow[] = categoryIds.map(
       (category_id): ModelCategoryRow => ({ model_id: modelId, category_id }),
     );
-    await admin.from("model_categories").upsert(rows, {
+    const { error } = await admin.from("model_categories").upsert(rows, {
       onConflict: "model_id,category_id",
     });
+    if (error) throw new Error(error.message);
   }
   if (tagIds && tagIds.length > 0) {
     const rows: ModelTagRow[] = tagIds.map((tag_id): ModelTagRow => ({ model_id: modelId, tag_id }));
-    await admin.from("model_tags").upsert(rows, {
+    const { error } = await admin.from("model_tags").upsert(rows, {
       onConflict: "model_id,tag_id",
     });
+    if (error) throw new Error(error.message);
   }
 }
 
