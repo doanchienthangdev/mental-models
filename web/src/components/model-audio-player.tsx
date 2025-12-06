@@ -33,6 +33,8 @@ export function ModelAudioPlayer({ audioUrl, status, durationSeconds }: ModelAud
   const progress = duration > 0 ? Math.min(Math.max((currentTime / duration) * 100, 0), 100) : 0;
   const statusLabel = status ?? (hasAudio ? "ready soon" : "no audio available");
 
+  /* eslint-disable react-hooks/set-state-in-effect */
+  // We intentionally reset local playback state whenever the upstream audio changes.
   useEffect(() => {
     setCurrentTime(0);
     setIsPlaying(false);
@@ -42,6 +44,7 @@ export function ModelAudioPlayer({ audioUrl, status, durationSeconds }: ModelAud
       audioRef.current.currentTime = 0;
     }
   }, [audioUrl, durationSeconds]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     const audio = audioRef.current;

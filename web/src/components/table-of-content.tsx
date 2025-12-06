@@ -156,8 +156,8 @@ export function TableOfContent({ items }: TableOfContentProps) {
   }, []);
 
   const renderNodes = useCallback(
-    (nodes: TocNode[], depth = 0) =>
-      nodes.map((node) => {
+    function render(nodes: TocNode[], depth = 0) {
+      return nodes.map((node) => {
         const isActive = activeId === node.id;
         const hasChildren = node.children.length > 0;
         const isOpen = openIds.has(node.id);
@@ -191,10 +191,11 @@ export function TableOfContent({ items }: TableOfContentProps) {
                 </span>
               )}
             </button>
-            {hasChildren && isOpen && <div className="pl-3">{renderNodes(node.children, depth + 1)}</div>}
+            {hasChildren && isOpen && <div className="pl-3">{render(node.children, depth + 1)}</div>}
           </div>
         );
-      }),
+      });
+    },
     [activeId, handleClick, openIds, toggleNode],
   );
 

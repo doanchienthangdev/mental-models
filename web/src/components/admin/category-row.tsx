@@ -46,15 +46,15 @@ export function CategoryRow({ category, updateAction, deleteAction }: CategoryRo
     [],
   );
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (state.status === "success") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setToast({ type: "success", message: state.message ?? "Category updated" });
     } else if (state.status === "error") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setToast({ type: "error", message: state.message ?? "Update failed" });
     }
   }, [state]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     if (toast && toast.type !== "loading") {
