@@ -1,22 +1,42 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { fetchModels, listModelStatuses } from "@/lib/models";
 
-const tableResults: Record<string, any> = {};
+type TableResult = {
+  data: unknown;
+  error: null | { message: string };
+  count?: number;
+};
+
+const tableResults: Record<string, TableResult> = {};
+
+type ChainMethod = () => SupabaseQuery;
+
+type SupabaseQuery = {
+  select: ChainMethod;
+  order: ChainMethod;
+  in: ChainMethod;
+  eq: ChainMethod;
+  ilike: ChainMethod;
+  overlaps: ChainMethod;
+  range: ChainMethod;
+  limit: ChainMethod;
+  then: (resolve: (value: TableResult) => unknown) => Promise<unknown>;
+};
 
 vi.mock("@/lib/supabase/client", () => {
-  const createQuery = (table: string) => {
-    const query: any = {
-      select: vi.fn().mockReturnThis(),
-      order: vi.fn().mockReturnThis(),
-      in: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      ilike: vi.fn().mockReturnThis(),
-      overlaps: vi.fn().mockReturnThis(),
-      range: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockReturnThis(),
-      then: (resolve: (value: any) => void) => Promise.resolve(tableResults[table]).then(resolve),
+  const createQuery = (table: string): SupabaseQuery => {
+    const chain: SupabaseQuery = {
+      select: vi.fn<ChainMethod>(() => chain),
+      order: vi.fn<ChainMethod>(() => chain),
+      in: vi.fn<ChainMethod>(() => chain),
+      eq: vi.fn<ChainMethod>(() => chain),
+      ilike: vi.fn<ChainMethod>(() => chain),
+      overlaps: vi.fn<ChainMethod>(() => chain),
+      range: vi.fn<ChainMethod>(() => chain),
+      limit: vi.fn<ChainMethod>(() => chain),
+      then: (resolve) => Promise.resolve(tableResults[table]).then(resolve),
     };
-    return query;
+    return chain;
   };
 
   return {

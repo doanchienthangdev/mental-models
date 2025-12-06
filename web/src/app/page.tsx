@@ -1,11 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { fetchModels, type ModelRecord } from "@/lib/models";
 import { listCategories } from "@/lib/categories";
 import { listTags } from "@/lib/tags";
-import { cn } from "@/lib/utils";
 import { BookOpen, Headphones, PlusCircle, RefreshCw } from "lucide-react";
 import { HeroGlobe } from "@/components/hero-globe";
 import { HeroCtaButtons } from "@/components/hero-cta-buttons";
