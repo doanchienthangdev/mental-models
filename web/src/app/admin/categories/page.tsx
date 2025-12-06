@@ -18,7 +18,7 @@ async function createCategoryAction(formData: FormData) {
   if (!name || !slug) {
     throw new Error("Name and slug are required");
   }
-  await createCategory({ name, slug, description: description || null });
+  await createCategory({ name, slug, description: description || undefined });
   revalidatePath("/admin/categories");
 }
 
@@ -33,9 +33,9 @@ async function updateCategoryAction(_state: UpdateState, formData: FormData): Pr
     const slug = String(formData.get("slug") ?? "").trim();
     const description = ((formData.get("description") as string) || "").trim();
     await updateCategory(id, {
-      name: name || null,
-      slug: slug || null,
-      description: description || null,
+      name: name || undefined,
+      slug: slug || undefined,
+      description: description || undefined,
     });
     revalidatePath("/admin/categories");
     return { status: "success", message: `${name || "Category"} updated successfully` };
