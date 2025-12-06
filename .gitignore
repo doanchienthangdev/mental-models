@@ -1,3 +1,10 @@
+# ignore local artifacts
 .DS_Store
 .npm-cache/
 web/.npm-cache/
+
+# Vibe-only docs (keep local)
+BLUEPRINT.md
+PROJECT_PLAN.md
+UI_SPECS.md
+VIBE_OS.md
