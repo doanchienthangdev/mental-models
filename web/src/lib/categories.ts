@@ -29,21 +29,28 @@ export async function listTags(): Promise<Tag[]> {
 
 export async function createCategory(input: Database["public"]["Tables"]["categories"]["Insert"]) {
   const admin = getSupabaseAdminClient();
-  const { data, error } = await admin.from("categories").insert(input).select().single();
+  // Supabase generics struggle when using .insert().select().single() in strict mode; cast builder temporarily.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const categoriesTable = admin.from("categories") as any;
+  const { data, error } = await categoriesTable.insert(input).select().single();
   if (error) throw new Error(error.message);
   return data;
 }
 
 export async function updateCategory(id: string, input: Database["public"]["Tables"]["categories"]["Update"]) {
   const admin = getSupabaseAdminClient();
-  const { data, error } = await admin.from("categories").update(input).eq("id", id).select().single();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const categoriesTable = admin.from("categories") as any;
+  const { data, error } = await categoriesTable.update(input).eq("id", id).select().single();
   if (error) throw new Error(error.message);
   return data;
 }
 
 export async function deleteCategory(id: string) {
   const admin = getSupabaseAdminClient();
-  const { error } = await admin.from("categories").delete().eq("id", id);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const categoriesTable = admin.from("categories") as any;
+  const { error } = await categoriesTable.delete().eq("id", id);
   if (error) throw new Error(error.message);
   return true;
 }

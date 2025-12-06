@@ -13,6 +13,9 @@ import { ModelAudioPlayer } from "@/components/model-audio-player";
 import { listCategories } from "@/lib/categories";
 import { listTags } from "@/lib/tags";
 import { TableOfContent } from "@/components/table-of-content";
+import type { Database } from "@/lib/supabase/types";
+
+type AudioAssetRow = Database["public"]["Tables"]["audio_assets"]["Row"];
 
 const tagPalette = [
   "border-[#1d4f7a] bg-[#0f2740] text-[#6ec4ff]",
@@ -56,7 +59,7 @@ export default async function ModelDetailPage({ params }: { params: Promise<{ sl
     .eq("is_primary", true)
     .order("created_at", { ascending: false })
     .limit(1)
-    .single();
+    .single<AudioAssetRow>();
   const toc = buildToc(model.body);
   const relatedModelsQuery = model.category
     ? await supabase
@@ -67,7 +70,14 @@ export default async function ModelDetailPage({ params }: { params: Promise<{ sl
         .order("updated_at", { ascending: false })
         .limit(5)
     : { data: [], error: null };
-  const relatedModels = relatedModelsQuery.data ?? [];
+  const relatedModels =
+    (relatedModelsQuery.data as Array<{
+      id: string;
+      title: string;
+      slug: string;
+      cover_url: string | null;
+      updated_at: string | null;
+    }>) ?? [];
   return (
     <div className="mx-auto flex max-w-6xl gap-8 px-6 pb-16 pt-10 lg:px-8">
       <aside className="hidden w-56 shrink-0 lg:block">

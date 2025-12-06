@@ -94,7 +94,8 @@ export async function listModelStatuses() {
     throw new Error(error.message);
   }
   const unique = new Set<string>();
-  for (const row of data ?? []) {
+  const rows = (data ?? []) as Array<Pick<ModelRecord, "status">>;
+  for (const row of rows) {
     if (row.status) {
       unique.add(row.status);
     }
@@ -115,7 +116,10 @@ export async function createModelEntry(input: ModelInput): Promise<ModelRecord> 
     status: "published",
     audio_status: "idle",
   };
-  const { data, error } = await admin.from("models").insert(payload).select().single();
+  // Supabase typing falters on chained select().single(); cast builder temporarily.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const modelsTable = admin.from("models") as any;
+  const { data, error } = await modelsTable.insert(payload).select().single();
   if (error) {
     throw new Error(error.message);
   }
