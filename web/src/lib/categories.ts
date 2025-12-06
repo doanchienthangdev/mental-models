@@ -3,14 +3,14 @@ import type { Database } from "./supabase/types";
 
 export type Category = Database["public"]["Tables"]["categories"]["Row"];
 
-export async function listCategories() {
+export async function listCategories(): Promise<Category[]> {
   try {
     const { data, error } = await supabase.from("categories").select("*").order("name");
     if (error) throw new Error(error.message);
-    return data ?? [];
+    return data ?? ([] as Category[]);
   } catch (err) {
     console.error("listCategories failed", err);
-    return [];
+    return [] as Category[];
   }
 }
 
