@@ -13,7 +13,10 @@ import { ModelAudioPlayer } from "@/components/model-audio-player";
 import { listCategories } from "@/lib/categories";
 import { listTags } from "@/lib/tags";
 import { TableOfContent } from "@/components/table-of-content";
+import { TableWidthSync } from "@/components/table-width-sync";
 import type { Database } from "@/lib/supabase/types";
+import type { Components } from "react-markdown";
+import { cn } from "@/lib/utils";
 
 type AudioAssetRow = Database["public"]["Tables"]["audio_assets"]["Row"];
 
@@ -24,6 +27,14 @@ const tagPalette = [
   "border-[#5f3c2e] bg-[#2b130a] text-[#f5b48c]",
   "border-[#5d2d3a] bg-[#2b0d17] text-[#ff8ab3]",
 ];
+
+const markdownComponents: Components = {
+  table: ({ className, ...props }) => (
+    <div className="table-wrapper" data-markdown="block">
+      <table {...props} className={cn(className)} />
+    </div>
+  ),
+};
 
 const buildToc = (body?: string | null) => {
   if (!body) return [];
@@ -121,7 +132,7 @@ export default async function ModelDetailPage({ params }: { params: Promise<{ sl
         )}
 
         {model.cover_url && (
-          <div className="w-full overflow-hidden rounded-2xl border border-[#1e3442] bg-[#0f202d]">
+          <div data-model-cover className="w-full overflow-hidden rounded-2xl border border-[#1e3442] bg-[#0f202d]">
             <Image
               src={model.cover_url}
               alt={model.title}
@@ -138,11 +149,12 @@ export default async function ModelDetailPage({ params }: { params: Promise<{ sl
           <p className="text-base text-slate-400/80">{model.summary}</p>
         )}
 
-        <article className="prose prose-invert prose-dark max-w-none space-y-6 text-[15px] leading-7">
-          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSlug]}>
+        <article className="markdown-body prose prose-invert prose-dark max-w-none space-y-6 text-[15px] leading-7">
+          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSlug]} components={markdownComponents}>
             {model.body ?? model.summary ?? ""}
           </ReactMarkdown>
         </article>
+        <TableWidthSync />
 
         <section className="border-t border-[#1e3442] pt-6 text-xs text-slate-400">
           <p>References</p>
