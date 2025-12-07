@@ -221,26 +221,28 @@ export function LibraryClient({
             </div>
           </form>
         </div>
-        <div className="flex flex-1 min-w-[200px] gap-2">
-          <SelectBox label="Category" className="w-[180px]">
-            <FilterToggleButton
-              label={selectedCategories.length ? `${selectedCategories.length} selected` : "Categories"}
-              active={selectedCategories.length > 0}
-              onClick={() => openFilter("category")}
-              onClear={() => clearFilter("category")}
-            />
-          </SelectBox>
-          <SelectBox label="Tag" className="w-[180px]">
-            <FilterToggleButton
-              label={selectedTags.length ? `${selectedTags.length} selected` : "Tags"}
-              active={selectedTags.length > 0}
-              onClick={() => openFilter("tag")}
-              onClear={() => clearFilter("tag")}
-            />
-          </SelectBox>
-          <SelectBox label="Sort by" className="w-[200px] flex-1">
+        <div className="flex w-full flex-col gap-3 sm:flex-1 sm:min-w-[200px] sm:flex-row sm:items-end sm:gap-2">
+          <div className="flex gap-2 sm:flex-1">
+            <SelectBox label="Category" className="basis-1/2 sm:basis-auto sm:w-[180px]">
+              <FilterToggleButton
+                label={selectedCategories.length ? `${selectedCategories.length} selected` : "Categories"}
+                active={selectedCategories.length > 0}
+                onClick={() => openFilter("category")}
+                onClear={() => clearFilter("category")}
+              />
+            </SelectBox>
+            <SelectBox label="Tag" className="basis-1/2 sm:basis-auto sm:w-[180px]">
+              <FilterToggleButton
+                label={selectedTags.length ? `${selectedTags.length} selected` : "Tags"}
+                active={selectedTags.length > 0}
+                onClick={() => openFilter("tag")}
+                onClear={() => clearFilter("tag")}
+              />
+            </SelectBox>
+          </div>
+          <SelectBox label="Sort by" className="w-full sm:w-[200px] sm:flex-1">
             <select
-              className="h-11 w-full rounded-lg border border-[#1e3442] bg-[#10202d] px-4 text-slate-100"
+              className="h-11 w-full rounded-lg border border-[#1e3442] bg-[#10202d] px-4 text-center text-slate-100"
               value={sortOrder}
               onChange={(event) => commitFilters({ sort: event.target.value as "recent" | "oldest" })}
             >
