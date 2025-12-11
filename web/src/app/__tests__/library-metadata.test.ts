@@ -1,4 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
+vi.mock("@/lib/supabase/client", () => ({
+  supabase: {
+    from: vi.fn(),
+  },
+}));
+
 import { generateMetadata } from "@/app/library/page";
 
 const mockCategories = vi.hoisted(() => [

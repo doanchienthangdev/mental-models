@@ -1,4 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
+vi.mock("@/lib/supabase/client", () => ({
+  supabase: {
+    from: vi.fn(),
+  },
+}));
+
 import { generateMetadata } from "@/app/models/[slug]/page";
 
 const modelBase = {
@@ -18,13 +24,15 @@ const modelBase = {
   updated_at: new Date().toISOString(),
 };
 
-const fetchModelBySlug = vi.fn(async (slug: string) => {
-  if (slug === "not-found") throw new Error("not found");
-  if (slug === "no-cover") {
-    return { ...modelBase, cover_url: null };
-  }
-  return modelBase;
-});
+const fetchModelBySlug = vi.hoisted(() =>
+  vi.fn(async (slug: string) => {
+    if (slug === "not-found") throw new Error("not found");
+    if (slug === "no-cover") {
+      return { ...modelBase, cover_url: null };
+    }
+    return modelBase;
+  }),
+);
 
 vi.mock("@/lib/models", () => ({
   fetchModelBySlug,

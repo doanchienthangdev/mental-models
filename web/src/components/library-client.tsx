@@ -46,19 +46,27 @@ export function LibraryClient({
   totalCount,
   pageSize,
   initialSearchTerm = "",
-  initialSelectedCategories = [],
-  initialSelectedTags = [],
+  initialSelectedCategories,
+  initialSelectedTags,
   initialSortOrder = "recent",
   initialPage = 1,
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const normalizedInitialCategories = useMemo(
+    () => ensureSingle(initialSelectedCategories ?? []),
+    [initialSelectedCategories ? initialSelectedCategories.join("|") : ""],
+  );
+  const normalizedInitialTags = useMemo(
+    () => initialSelectedTags ?? [],
+    [initialSelectedTags ? initialSelectedTags.join("|") : ""],
+  );
   const [searchInput, setSearchInput] = useState(initialSearchTerm);
   const [currentSearchTerm, setCurrentSearchTerm] = useState(initialSearchTerm);
   const [sortOrder, setSortOrder] = useState<"recent" | "oldest">(initialSortOrder);
   const [activeFilter, setActiveFilter] = useState<FilterType>(null);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(ensureSingle(initialSelectedCategories));
-  const [selectedTags, setSelectedTags] = useState<string[]>(initialSelectedTags);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(normalizedInitialCategories);
+  const [selectedTags, setSelectedTags] = useState<string[]>(normalizedInitialTags);
   const [pendingSelection, setPendingSelection] = useState<string[]>([]);
   const [page, setPage] = useState(initialPage);
 
@@ -79,12 +87,12 @@ export function LibraryClient({
   }, [initialSearchTerm]);
 
   useEffect(() => {
-    setSelectedCategories(ensureSingle(initialSelectedCategories));
-  }, [initialSelectedCategories]);
+    setSelectedCategories(normalizedInitialCategories);
+  }, [normalizedInitialCategories]);
 
   useEffect(() => {
-    setSelectedTags(initialSelectedTags);
-  }, [initialSelectedTags]);
+    setSelectedTags(normalizedInitialTags);
+  }, [normalizedInitialTags]);
 
   useEffect(() => {
     setSortOrder(initialSortOrder);

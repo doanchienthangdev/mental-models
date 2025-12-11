@@ -42,7 +42,7 @@ describe("LibraryClient category selection", () => {
 
     expect(screen.getByRole("heading", { name: "Systems Thinking" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Library" })).toHaveAttribute("href", "/library");
-    expect(screen.getByText("Systems Thinking")).toBeInTheDocument();
+    expect(within(screen.getByRole("navigation")).getByText("Systems Thinking")).toBeInTheDocument();
   });
 
   it("keeps default title and breadcrumb when no category is selected", () => {
