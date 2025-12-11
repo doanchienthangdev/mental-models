@@ -74,26 +74,27 @@ export default async function HomePage() {
   };
 
   const categoryIcons: ReactNode[] = [
-    <Brain className="h-8 w-8" key="brain" />,
-    <Network className="h-8 w-8" key="network" />,
-    <Compass className="h-8 w-8" key="compass" />,
-    <Target className="h-8 w-8" key="target" />,
-    <Lightbulb className="h-8 w-8" key="lightbulb" />,
-    <Workflow className="h-8 w-8" key="workflow" />,
-    <Sparkles className="h-8 w-8" key="sparkles" />,
-    <Layers className="h-8 w-8" key="layers" />,
+    <Target className="h-6 w-6" key="target-fallback" />,
+    <Network className="h-6 w-6" key="network-fallback" />,
+    <Compass className="h-6 w-6" key="compass-fallback" />,
+    <Brain className="h-6 w-6" key="brain-fallback" />,
+    <Workflow className="h-6 w-6" key="workflow-fallback" />,
+    <Sparkles className="h-6 w-6" key="sparkles-fallback" />,
+    <BookOpen className="h-6 w-6" key="book-fallback" />,
+    <Lightbulb className="h-6 w-6" key="lightbulb-fallback" />,
   ];
 
   const iconBySlug: Record<string, ReactNode> = {
-    "decision-making": <Target className="h-8 w-8" />,
-    "systems-thinking": <Network className="h-8 w-8" />,
-    strategy: <Compass className="h-8 w-8" />,
-    psychology: <Brain className="h-8 w-8" />,
-    productivity: <Workflow className="h-8 w-8" />,
-    creativity: <Sparkles className="h-8 w-8" />,
-    learning: <BookOpen className="h-8 w-8" />,
-    general: <Lightbulb className="h-8 w-8" />,
-    "general-thinking": <Lightbulb className="h-8 w-8" />,
+    "decision-making": <Target className="h-6 w-6" />,
+    "systems-thinking": <Network className="h-6 w-6" />,
+    strategy: <Compass className="h-6 w-6" />,
+    psychology: <Brain className="h-6 w-6" />,
+    productivity: <Workflow className="h-6 w-6" />,
+    creativity: <Sparkles className="h-6 w-6" />,
+    learning: <BookOpen className="h-6 w-6" />,
+    business: <Layers className="h-6 w-6" />,
+    general: <Lightbulb className="h-6 w-6" />,
+    "general-thinking": <Lightbulb className="h-6 w-6" />,
   };
 
   const getCategoryIcon = (slug: string, idx: number) => iconBySlug[slug] ?? categoryIcons[idx % categoryIcons.length];
