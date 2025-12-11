@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { fetchModels, type ModelRecord } from "@/lib/models";
 import { listCategories } from "@/lib/categories";
 import { listTags } from "@/lib/tags";
+import type { ReactNode } from "react";
 import {
   BookOpen,
   Brain,
@@ -72,7 +73,7 @@ export default async function HomePage() {
     );
   };
 
-  const categoryIcons = [
+  const categoryIcons: ReactNode[] = [
     <Brain className="h-8 w-8" key="brain" />,
     <Network className="h-8 w-8" key="network" />,
     <Compass className="h-8 w-8" key="compass" />,
@@ -83,7 +84,7 @@ export default async function HomePage() {
     <Layers className="h-8 w-8" key="layers" />,
   ];
 
-  const iconBySlug: Record<string, JSX.Element> = {
+  const iconBySlug: Record<string, ReactNode> = {
     "decision-making": <Target className="h-8 w-8" />,
     "systems-thinking": <Network className="h-8 w-8" />,
     strategy: <Compass className="h-8 w-8" />,
