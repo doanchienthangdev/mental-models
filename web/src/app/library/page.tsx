@@ -2,6 +2,7 @@ import { fetchModels } from "@/lib/models";
 import { listCategories } from "@/lib/categories";
 import { listTags } from "@/lib/tags";
 import { LibraryClient } from "@/components/library-client";
+import type { Metadata } from "next";
 
 const PAGE_SIZE = 12;
 
@@ -26,6 +27,19 @@ const extractTagKey = (value: string) => {
 };
 
 export const revalidate = 0;
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}): Promise<Metadata> {
+  const resolved = await searchParams;
+  const category = typeof resolved?.category === "string" ? resolved.category : Array.isArray(resolved?.category) ? resolved.category[0] : "";
+  const categories = await listCategories();
+  const categoryName = categories.find((c) => c.slug === category)?.name;
+  const title = categoryName ? `${categoryName} Mental Models` : "All Mental Models";
+  return { title };
+}
 
 export default async function LibraryPage({
   searchParams,

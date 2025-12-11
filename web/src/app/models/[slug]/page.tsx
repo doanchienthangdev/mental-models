@@ -53,6 +53,25 @@ const buildToc = (body?: string | null) => {
 
 export const revalidate = 0;
 
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const model = await fetchModelBySlug(slug).catch(() => null);
+  if (!model) {
+    return { title: "Mental Model | Not Found" };
+  }
+  const summary = (model.summary ?? "").slice(0, 150);
+  const image = model.cover_url ? [{ url: model.cover_url, alt: model.title }] : [{ url: "/images/favicon.ico", alt: "Mental Models" }];
+  return {
+    title: `${model.title} - Mental Models`,
+    description: summary,
+    openGraph: {
+      title: `${model.title} - Mental Models`,
+      description: summary,
+      images: image,
+    },
+  };
+}
+
 export default async function ModelDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const model = await fetchModelBySlug(slug).catch(() => null);

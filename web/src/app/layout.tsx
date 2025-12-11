@@ -23,6 +23,18 @@ export const metadata: Metadata = {
   icons: {
     icon: "/images/favicon.ico",
   },
+  openGraph: {
+    title: "Mental Models Hub",
+    description: "Curate, read, and listen to mental models with elegant dark UI.",
+    images: [
+      {
+        url: "/images/favicon.ico",
+        width: 64,
+        height: 64,
+        alt: "Mental Models Hub",
+      },
+    ],
+  },
 };
 
 export default function RootLayout({
