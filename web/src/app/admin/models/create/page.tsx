@@ -13,6 +13,7 @@ import remarkGfm from "remark-gfm";
 import { Upload, X, CheckCircle2 } from "lucide-react";
 import { storage, ensureAnonAuth } from "@/lib/firebase/client";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
+import { ArticleImageUploader, type ArticleImage } from "@/components/admin/article-image-uploader";
 
 type Category = Awaited<ReturnType<typeof listCategories>>[number];
 type Tag = Awaited<ReturnType<typeof listTags>>[number];
@@ -46,6 +47,7 @@ function CreateModelClient() {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [successProgress, setSuccessProgress] = useState(100);
+  const [articleImages, setArticleImages] = useState<ArticleImage[]>([]);
 
   const [form, setForm] = useState({
     title: "",
@@ -478,6 +480,13 @@ function CreateModelClient() {
             </div>
           </Field>
         </div>
+
+        <Field label="Article Images">
+          <ArticleImageUploader initialImages={articleImages} onChange={setArticleImages} />
+          <p className="text-xs text-slate-400">
+            Tip: Click an uploaded image to copy Markdown and paste it into the body below.
+          </p>
+        </Field>
 
         <Field label="Body">
           <div className="rounded-xl border border-[#1e3442] bg-[#0f202d] p-3">

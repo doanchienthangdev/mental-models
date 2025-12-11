@@ -16,6 +16,7 @@ import remarkGfm from "remark-gfm";
 import { storage, ensureAnonAuth } from "@/lib/firebase/client";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ArticleImageUploader, type ArticleImage } from "@/components/admin/article-image-uploader";
 
 type Category = Awaited<ReturnType<typeof listCategories>>[number];
 type Tag = Awaited<ReturnType<typeof listTags>>[number];
@@ -68,6 +69,7 @@ function EditModelClient({ slug }: { slug: string }) {
   const [successProgress, setSuccessProgress] = useState(100);
   const [showDelete, setShowDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [articleImages, setArticleImages] = useState<ArticleImage[]>([]);
 
   const [form, setForm] = useState({
     id: "",
@@ -487,6 +489,13 @@ function EditModelClient({ slug }: { slug: string }) {
             </div>
           </Field>
         </div>
+
+        <Field label="Article Images">
+          <ArticleImageUploader initialImages={articleImages} onChange={setArticleImages} />
+          <p className="text-xs text-slate-400">
+            Tip: Click an uploaded image to copy Markdown and paste it into the body below.
+          </p>
+        </Field>
 
         <Field label="Body">
           <div className="rounded-xl border border-[#1e3442] bg-[#0f202d] p-3">
