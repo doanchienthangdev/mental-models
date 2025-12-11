@@ -3,7 +3,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { fetchModels, type ModelRecord } from "@/lib/models";
 import { listCategories } from "@/lib/categories";
-import { listTags } from "@/lib/tags";
 import type { ReactNode } from "react";
 import {
   BookOpen,
@@ -26,12 +25,10 @@ import { FeaturedModelCard } from "@/components/featured-model-card";
 export const revalidate = 0;
 
 export default async function HomePage() {
-  const [{ data: allModels }, categories, tags] = await Promise.all([
+  const [{ data: allModels }, categories] = await Promise.all([
     fetchModels({ status: "published" }),
     listCategories(),
-    listTags(),
   ]);
-  const tagMap = new Map(tags.map((t) => [t.id, t.name]));
   const catMap = buildCategoryMap(categories);
   const tagPalette = [
     "bg-emerald-600/20 text-emerald-200 border-emerald-500/30",

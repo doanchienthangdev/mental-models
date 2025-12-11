@@ -51,6 +51,8 @@ export function ArticleImageUploader({ initialImages, onChange }: Props) {
   useEffect(() => {
     if (initializedRef.current || !initialImages) return;
     if (!arraysEqual(initialImages, images)) {
+      // Sync initial images once when provided (safe: guarded by ref).
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setImages(initialImages);
     }
     initializedRef.current = true;

@@ -21,11 +21,6 @@ function sanitizeList(values: string[]) {
   );
 }
 
-const extractTagKey = (value: string) => {
-  const parts = value.split("-");
-  return parts.length ? parts[parts.length - 1] : value;
-};
-
 export const revalidate = 0;
 
 export async function generateMetadata({
