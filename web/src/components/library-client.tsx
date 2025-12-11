@@ -53,14 +53,8 @@ export function LibraryClient({
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const normalizedInitialCategories = useMemo(
-    () => ensureSingle(initialSelectedCategories ?? []),
-    [initialSelectedCategories ? initialSelectedCategories.join("|") : ""],
-  );
-  const normalizedInitialTags = useMemo(
-    () => initialSelectedTags ?? [],
-    [initialSelectedTags ? initialSelectedTags.join("|") : ""],
-  );
+  const normalizedInitialCategories = useMemo(() => ensureSingle(initialSelectedCategories ?? []), [initialSelectedCategories]);
+  const normalizedInitialTags = useMemo(() => initialSelectedTags ?? [], [initialSelectedTags]);
   const [searchInput, setSearchInput] = useState(initialSearchTerm);
   const [currentSearchTerm, setCurrentSearchTerm] = useState(initialSearchTerm);
   const [sortOrder, setSortOrder] = useState<"recent" | "oldest">(initialSortOrder);
