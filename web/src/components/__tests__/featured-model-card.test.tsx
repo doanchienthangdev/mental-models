@@ -20,12 +20,11 @@ const baseModel: ModelRecord = {
 };
 
 describe("FeaturedModelCard", () => {
-  it("renders model content, tags, and metadata", () => {
+  it("renders model content, category badge, and metadata", () => {
     render(
       <FeaturedModelCard
         model={baseModel}
         summary="Trimmed summary"
-        tagNames={["Decision Making", "Strategy"]}
         categoryName="Strategy"
         tagPalette={["bg-blue-500 text-white", "bg-green-500 text-white"]}
         audioStatusLabel="Audio Ready"
@@ -35,8 +34,6 @@ describe("FeaturedModelCard", () => {
     expect(screen.getByRole("heading", { name: "Systems Thinking" })).toBeInTheDocument();
     expect(screen.getByText("Trimmed summary")).toBeInTheDocument();
     expect(screen.getByText("Audio Ready")).toBeInTheDocument();
-    const strategyLabels = screen.getAllByText("Strategy");
-    expect(strategyLabels.length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByText("Decision Making")).toBeInTheDocument();
+    expect(screen.getByText("Strategy")).toBeInTheDocument();
   });
 });

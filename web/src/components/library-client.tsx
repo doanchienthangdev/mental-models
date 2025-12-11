@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, Filter, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Filter, X, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import type { ModelRecord } from "@/lib/models";
 import type { Category } from "@/lib/categories";
 import type { Tag } from "@/lib/tags";
 import { cn } from "@/lib/utils";
+import { colorForSlug } from "@/components/lib/color";
 
 type Props = {
   models: ModelRecord[];
@@ -25,6 +26,8 @@ type Props = {
   initialSortOrder?: "recent" | "oldest";
   initialPage?: number;
 };
+
+const ensureSingle = (values: string[]) => (values.length > 0 ? [values[0]] : []);
 
 type FilterType = "category" | "tag" | null;
 
@@ -54,15 +57,18 @@ export function LibraryClient({
   const [currentSearchTerm, setCurrentSearchTerm] = useState(initialSearchTerm);
   const [sortOrder, setSortOrder] = useState<"recent" | "oldest">(initialSortOrder);
   const [activeFilter, setActiveFilter] = useState<FilterType>(null);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(initialSelectedCategories);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(ensureSingle(initialSelectedCategories));
   const [selectedTags, setSelectedTags] = useState<string[]>(initialSelectedTags);
   const [pendingSelection, setPendingSelection] = useState<string[]>([]);
   const [page, setPage] = useState(initialPage);
 
+  const categoryNameMap = useMemo(() => buildCategoryMap(categories), [categories]);
   const categoryOptions = useMemo(() => categories.map((c) => ({ id: c.slug, label: c.name ?? c.slug })), [categories]);
   const tagOptions = useMemo(() => tags.map((t) => ({ id: t.id, label: t.name ?? t.id })), [tags]);
-  const categoryNameMap = useMemo(() => new Map(categories.map((c) => [c.slug, c.name ?? c.slug])), [categories]);
-  const tagNameMap = useMemo(() => new Map(tags.map((t) => [t.id, t.name ?? t.id])), [tags]);
+  const tagNameMap = useMemo(() => buildTagMap(tags), [tags]);
+  const activeCategorySlug = selectedCategories[0];
+  const activeCategoryName = activeCategorySlug ? categoryNameMap.get(activeCategorySlug) ?? activeCategorySlug : null;
+  const categoryFilterLabel = "Categories";
 
   useEffect(() => {
     setSearchInput(initialSearchTerm);
@@ -73,7 +79,7 @@ export function LibraryClient({
   }, [initialSearchTerm]);
 
   useEffect(() => {
-    setSelectedCategories(initialSelectedCategories);
+    setSelectedCategories(ensureSingle(initialSelectedCategories));
   }, [initialSelectedCategories]);
 
   useEffect(() => {
@@ -95,7 +101,7 @@ export function LibraryClient({
   const openFilter = (type: FilterType) => {
     if (!type) return;
     setActiveFilter(type);
-    if (type === "category") setPendingSelection([...selectedCategories]);
+    if (type === "category") setPendingSelection(ensureSingle([...selectedCategories]));
     if (type === "tag") setPendingSelection([...selectedTags]);
   };
 
@@ -135,7 +141,7 @@ export function LibraryClient({
 
   const commitFilters = (overrides: Partial<{ search: string; categories: string[]; tags: string[]; sort: "recent" | "oldest"; page: number }>) => {
     const nextSearch = overrides.search !== undefined ? overrides.search : currentSearchTerm;
-    const nextCategories = overrides.categories ?? selectedCategories;
+    const nextCategories = ensureSingle(overrides.categories ?? selectedCategories);
     const nextTags = overrides.tags ?? selectedTags;
     const nextSort = overrides.sort ?? sortOrder;
     const shouldResetPage =
@@ -157,7 +163,7 @@ export function LibraryClient({
 
   const applyFilter = () => {
     if (activeFilter === "category") {
-      commitFilters({ categories: [...pendingSelection] });
+      commitFilters({ categories: ensureSingle([...pendingSelection]) });
     }
     if (activeFilter === "tag") {
       commitFilters({ tags: [...pendingSelection] });
@@ -194,7 +200,17 @@ export function LibraryClient({
         Home
       </Link>
       <span className="px-2">&gt;</span>
-      <span>Library</span>
+      {activeCategorySlug ? (
+        <>
+          <Link href="/library" className="text-accent hover:underline">
+            Library
+          </Link>
+          <span className="px-2">&gt;</span>
+          <span>{activeCategoryName}</span>
+        </>
+      ) : (
+        <span>Library</span>
+      )}
     </nav>
   );
 
@@ -202,7 +218,9 @@ export function LibraryClient({
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
         {renderBreadcrumb()}
-        <h1 className="font-display text-4xl font-semibold text-white">Mental Models Library</h1>
+        <h1 className="font-display text-4xl font-semibold text-white">
+          {activeCategoryName ?? "Mental Models Library"}
+        </h1>
       </div>
 
       <div className="flex flex-wrap gap-4">
@@ -225,7 +243,7 @@ export function LibraryClient({
           <div className="flex gap-2 sm:flex-1">
             <SelectBox label="Category" className="basis-1/2 sm:basis-auto sm:w-[180px]">
               <FilterToggleButton
-                label={selectedCategories.length ? `${selectedCategories.length} selected` : "Categories"}
+                label={categoryFilterLabel}
                 active={selectedCategories.length > 0}
                 onClick={() => openFilter("category")}
                 onClear={() => clearFilter("category")}
@@ -241,14 +259,17 @@ export function LibraryClient({
             </SelectBox>
           </div>
           <SelectBox label="Sort by" className="w-full sm:w-[200px] sm:flex-1">
-            <select
-              className="h-11 w-full rounded-lg border border-[#1e3442] bg-[#10202d] px-4 text-center text-slate-100"
-              value={sortOrder}
-              onChange={(event) => commitFilters({ sort: event.target.value as "recent" | "oldest" })}
-            >
-              <option value="recent">Recently Added</option>
-              <option value="oldest">Oldest</option>
-            </select>
+            <div className="relative">
+              <select
+                className="h-11 w-full appearance-none rounded-lg border border-[#1e3442] bg-[#10202d] px-4 pr-12 text-center text-slate-100 transition hover:border-accent hover:text-white cursor-pointer"
+                value={sortOrder}
+                onChange={(event) => commitFilters({ sort: event.target.value as "recent" | "oldest" })}
+              >
+                <option value="recent">Recently Added</option>
+                <option value="oldest">Oldest</option>
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            </div>
           </SelectBox>
         </div>
       </div>
@@ -291,7 +312,7 @@ export function LibraryClient({
             key={`tagChip-${tag}`}
             className="flex items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-accent"
           >
-            {tagNameMap.get(tag) ?? tag}
+            {resolveTagLabel(tag, tagNameMap)}
             <button
               type="button"
               onClick={() => commitFilters({ tags: selectedTags.filter((item) => item !== tag) })}
@@ -310,7 +331,7 @@ export function LibraryClient({
       ) : (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {models.map((model) => (
-            <ModelCard key={model.id} model={model} tagPalette={tagPalette} tagMap={tagNameMap} categories={categoryNameMap} />
+            <ModelCard key={model.id} model={model} tagPalette={tagPalette} categories={categoryNameMap} />
           ))}
         </div>
       )}
@@ -325,6 +346,7 @@ export function LibraryClient({
           onChange={(next) => setPendingSelection(next)}
           onClose={closeFilter}
           onApply={applyFilter}
+          singleSelect={activeFilter === "category"}
         />
       )}
     </div>
@@ -334,17 +356,17 @@ export function LibraryClient({
 function ModelCard({
   model,
   tagPalette,
-  tagMap,
   categories,
 }: {
   model: ModelRecord;
   tagPalette: string[];
-  tagMap: Map<string, string>;
   categories: Map<string, string | null>;
 }) {
   const summary = truncateWords(model.summary ?? "", 20);
-  const tagNames = (model.tags ?? []).map((id) => tagMap.get(id) || id);
-  const categoryName = model.category ? categories.get(model.category) || model.category : "General";
+  const normalizedSlug = (model.category ?? "").replace(/[^a-z0-9]/gi, "");
+  const categoryName =
+    model.category ? categories.get(model.category) || categories.get(normalizedSlug) || model.category : "General";
+  const color = colorForSlug(model.category ?? model.slug, tagPalette);
   return (
     <Link
       href={`/models/${model.slug}`}
@@ -357,21 +379,15 @@ function ModelCard({
           <div className="h-full w-full bg-gradient-to-br from-slate-800 to-slate-900/50" />
         )}
       </div>
-      <div className="space-y-3 px-4 pb-8 pt-4">
+      <div className="space-y-3 px-4 pb-12 pt-4">
         <h3 className="font-display text-lg font-semibold text-white group-hover:text-accent">{model.title}</h3>
-        <p className="text-sm text-slate-300">{summary}</p>
+        <p className="text-sm text-slate-400">{summary}</p>
         <div className="flex flex-wrap gap-2">
-          {tagNames.map((tag, idx) => (
-            <Badge key={`${tag}-${idx}`} variant="outline" className={cn(tagPalette[idx % tagPalette.length])}>
-              {tag}
-            </Badge>
-          ))}
+          <Badge variant="outline" className={cn(color, "rounded-[4px]")}>
+            {categoryName}
+          </Badge>
         </div>
-        <div className="flex items-center gap-3 text-sm text-slate-400">
-          <span>{categoryName}</span>
-          <span className="h-1 w-1 rounded-full bg-slate-500" />
-          <span>{model.read_time ? `${model.read_time} min read` : "—"}</span>
-        </div>
+        <div className="flex items-center gap-3 text-sm text-slate-400">{model.read_time ? `${model.read_time} min read` : "—"}</div>
       </div>
     </Link>
   );
@@ -424,6 +440,7 @@ function FilterModal({
   onChange,
   onClose,
   onApply,
+  singleSelect = false,
 }: {
   title: string;
   options: { id: string; label: string }[];
@@ -431,6 +448,7 @@ function FilterModal({
   onChange: (next: string[]) => void;
   onClose: () => void;
   onApply: () => void;
+  singleSelect?: boolean;
 }) {
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-6">
@@ -451,13 +469,18 @@ function FilterModal({
               >
                 <span>{option.label}</span>
                 <input
-                  type="checkbox"
+                  type={singleSelect ? "radio" : "checkbox"}
+                  name={singleSelect ? `${title}-single` : `${title}-multi`}
                   className="h-4 w-4"
                   checked={checked}
                   onChange={(event) => {
-                    const next = event.target.checked
-                      ? [...values, option.id]
-                      : values.filter((id) => id !== option.id);
+                    const next = singleSelect
+                      ? event.target.checked
+                        ? [option.id]
+                        : []
+                      : event.target.checked
+                        ? [...values, option.id]
+                        : values.filter((id) => id !== option.id);
                     onChange(next);
                   }}
                 />
@@ -533,3 +556,35 @@ function truncateWords(text: string, limit: number) {
   if (words.length <= limit) return text;
   return words.slice(0, limit).join(" ") + "...";
 }
+
+function buildCategoryMap(categories: Category[]) {
+  const map = new Map<string, string>();
+  for (const c of categories) {
+    const name = c.name ?? c.slug;
+    const slug = c.slug ?? "";
+    map.set(slug, name);
+    const primary = slug.split("-")[0];
+    if (primary && !map.has(primary)) map.set(primary, name);
+    const normalized = slug.replace(/[^a-z0-9]/gi, "");
+    if (normalized && !map.has(normalized)) map.set(normalized, name);
+  }
+  return map;
+}
+
+function buildTagMap(tags: Tag[]) {
+  const map = new Map<string, string>();
+  for (const t of tags) {
+    const name = t.name ?? t.id;
+    map.set(t.id, name);
+    if (t.slug) {
+      map.set(t.slug, name);
+    }
+  }
+  return map;
+}
+
+const resolveTagLabel = (tag: string, tagNameMap: Map<string, string>) => {
+  const direct = tagNameMap.get(tag);
+  if (direct) return direct;
+  return tag;
+};

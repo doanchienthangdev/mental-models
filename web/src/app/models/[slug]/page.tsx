@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSlug from "rehype-slug";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import GithubSlugger from "github-slugger";
 import { fetchModelBySlug } from "@/lib/models";
 import { supabase } from "@/lib/supabase/client";
@@ -99,26 +99,27 @@ export default async function ModelDetailPage({ params }: { params: Promise<{ sl
       </aside>
 
       <main className="flex-1 space-y-6">
-        <Link href="/library" className="inline-flex items-center gap-2 text-sm text-slate-400 transition hover:text-white">
-          <ChevronLeft className="h-4 w-4" /> Back to models
-        </Link>
+        <nav className="inline-flex items-center gap-2 text-sm text-slate-400">
+          <Link href="/library" className="inline-flex items-center gap-1 transition hover:text-white">
+            <ChevronLeft className="h-4 w-4" />
+            Library
+          </Link>
+          <ChevronRight className="h-3 w-3 text-slate-500" />
+          {model.category ? (
+            <Link href={`/library?category=${model.category}`} className="text-accent hover:underline">
+              {categoryLabel}
+            </Link>
+          ) : (
+            <span className="text-slate-400">All Models</span>
+          )}
+        </nav>
 
         <header className="space-y-2">
           <p className="text-sm text-slate-400">
-            {categoryLabel} • {model.read_time ? `${model.read_time} min read` : "—"} • Updated{" "}
-            {new Date(model.updated_at).toLocaleDateString()}
+            {model.read_time ? `${model.read_time} min read` : "—"} • Updated {new Date(model.updated_at).toLocaleDateString()}
           </p>
           <h1 className="font-display text-4xl font-semibold text-white">{model.title}</h1>
-          <div className="flex flex-wrap gap-2 text-[13px]">
-            {(model.tags ?? []).map((tag, index) => {
-              const label = tagMap.get(tag) ?? tag;
-              return (
-                <Badge key={`${tag}-${index}`} variant="outline" className={tagPalette[index % tagPalette.length]}>
-                  {label}
-                </Badge>
-              );
-            })}
-          </div>
+          {(model.summary ?? "").trim() && <p className="text-base text-slate-400 mt-3">{model.summary}</p>}
         </header>
 
         {(audioAsset?.audio_url ?? model.audio_url) && (
@@ -145,16 +146,31 @@ export default async function ModelDetailPage({ params }: { params: Promise<{ sl
           </div>
         )}
 
-        {(model.summary ?? "").trim() && (
-          <p className="text-base text-slate-400/80">{model.summary}</p>
-        )}
-
         <article className="markdown-body prose prose-invert prose-dark max-w-none space-y-6 text-[15px] leading-7">
           <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSlug]} components={markdownComponents}>
             {model.body ?? model.summary ?? ""}
           </ReactMarkdown>
         </article>
         <TableWidthSync />
+
+        {(model.tags ?? []).length > 0 && (
+          <section className="space-y-3">
+            <h3 className="text-sm font-semibold text-slate-200">Tags</h3>
+            <div className="flex flex-wrap gap-2 text-[13px]">
+              {(model.tags ?? []).map((tag, index) => {
+              const label = tagMap.get(tag) ?? tag;
+              const query = tag;
+              return (
+                <Link key={`${tag}-${index}`} href={`/library?tag=${encodeURIComponent(query)}`}>
+                  <Badge variant="outline" className={tagPalette[index % tagPalette.length]}>
+                    {label}
+                  </Badge>
+                </Link>
+              );
+            })}
+            </div>
+          </section>
+        )}
 
         <section className="border-t border-[#1e3442] pt-6 text-xs text-slate-400">
           <p>References</p>

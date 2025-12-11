@@ -1,19 +1,20 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { ModelRecord } from "@/lib/models";
-import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { colorForSlug } from "@/components/lib/color";
 
 type FeaturedModelCardProps = {
   model: ModelRecord;
   summary: string;
-  tagNames: string[];
   categoryName: string;
   tagPalette: string[];
   audioStatusLabel: string;
 };
 
-export function FeaturedModelCard({ model, summary, tagNames, categoryName, tagPalette, audioStatusLabel }: FeaturedModelCardProps) {
+export function FeaturedModelCard({ model, summary, categoryName, tagPalette, audioStatusLabel }: FeaturedModelCardProps) {
+  const badgeColor = colorForSlug(model.category ?? model.slug, tagPalette);
   return (
     <Link
       key={model.slug}
@@ -30,21 +31,16 @@ export function FeaturedModelCard({ model, summary, tagNames, categoryName, tagP
           {audioStatusLabel}
         </span>
       </div>
-      <div className="space-y-3 px-4 py-5">
-        <div className="flex items-center justify-between text-xs text-slate-400">
-          <span>{categoryName}</span>
-          <span>{model.read_time ? `${model.read_time} min read` : "—"}</span>
-        </div>
-        <div>
-          <h3 className="font-display text-xl font-semibold text-white">{model.title}</h3>
-          <p className="mt-1 text-sm text-slate-300">{summary}</p>
-        </div>
+        <div className="space-y-3 px-4 pb-12 pt-4">
+          <div className="text-xs text-slate-400">{model.read_time ? `${model.read_time} min read` : "—"}</div>
+          <div>
+            <h3 className="font-display text-xl font-semibold text-white">{model.title}</h3>
+            <p className="mt-1 text-sm text-slate-400">{summary}</p>
+          </div>
         <div className="flex flex-wrap gap-2 text-xs">
-          {tagNames.map((tag, idx) => (
-            <Badge key={`${tag}-${idx}`} variant="outline" className={cn(tagPalette[idx % tagPalette.length])}>
-              {tag}
-            </Badge>
-          ))}
+          <Badge variant="outline" className={cn(badgeColor, "rounded-[4px]")}>
+            {categoryName}
+          </Badge>
         </div>
       </div>
     </Link>

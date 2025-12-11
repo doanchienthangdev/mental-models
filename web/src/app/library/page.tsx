@@ -20,6 +20,11 @@ function sanitizeList(values: string[]) {
   );
 }
 
+const extractTagKey = (value: string) => {
+  const parts = value.split("-");
+  return parts.length ? parts[parts.length - 1] : value;
+};
+
 export const revalidate = 0;
 
 export default async function LibraryPage({
@@ -30,7 +35,7 @@ export default async function LibraryPage({
   const resolvedSearchParams = await searchParams;
   const queryParam = typeof resolvedSearchParams?.q === "string" ? resolvedSearchParams.q.slice(0, 120) : "";
   const sanitizedQuery = queryParam.replace(/[\"'%;]/g, "").trim();
-  const categoryFilters = sanitizeList(toArray(resolvedSearchParams?.category));
+  const categoryFilters = sanitizeList(toArray(resolvedSearchParams?.category)).slice(0, 1);
   const tagFilters = sanitizeList(toArray(resolvedSearchParams?.tag));
   const rawSort = typeof resolvedSearchParams?.sort === "string" ? resolvedSearchParams.sort : undefined;
   const sortOrder = rawSort === "oldest" ? "oldest" : "recent";

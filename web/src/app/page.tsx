@@ -4,7 +4,20 @@ import { Button } from "@/components/ui/button";
 import { fetchModels, type ModelRecord } from "@/lib/models";
 import { listCategories } from "@/lib/categories";
 import { listTags } from "@/lib/tags";
-import { BookOpen, Headphones, PlusCircle, RefreshCw } from "lucide-react";
+import {
+  BookOpen,
+  Brain,
+  Compass,
+  Headphones,
+  Layers,
+  Lightbulb,
+  Network,
+  PlusCircle,
+  RefreshCw,
+  Sparkles,
+  Target,
+  Workflow,
+} from "lucide-react";
 import { HeroGlobe } from "@/components/hero-globe";
 import { HeroCtaButtons } from "@/components/hero-cta-buttons";
 import { FeaturedModelCard } from "@/components/featured-model-card";
@@ -18,7 +31,7 @@ export default async function HomePage() {
     listTags(),
   ]);
   const tagMap = new Map(tags.map((t) => [t.id, t.name]));
-  const catMap = new Map(categories.map((c) => [c.slug, c.name]));
+  const catMap = buildCategoryMap(categories);
   const tagPalette = [
     "bg-emerald-600/20 text-emerald-200 border-emerald-500/30",
     "bg-sky-600/20 text-sky-200 border-sky-500/30",
@@ -45,7 +58,6 @@ export default async function HomePage() {
 
   const renderModelCard = (model: ModelRecord) => {
     const summary = truncateWords(model.summary ?? "", 20);
-    const tagNames = (model.tags ?? []).map((id) => tagMap.get(id) || id);
     const categoryName = model.category ? catMap.get(model.category) || model.category : "General";
     const labelInfo = statusLabel(model.audio_status);
     return (
@@ -53,13 +65,37 @@ export default async function HomePage() {
         key={model.slug}
         model={model}
         summary={summary}
-        tagNames={tagNames}
         categoryName={categoryName}
         tagPalette={tagPalette}
         audioStatusLabel={labelInfo.label}
       />
     );
   };
+
+  const categoryIcons = [
+    <Brain className="h-8 w-8" key="brain" />,
+    <Network className="h-8 w-8" key="network" />,
+    <Compass className="h-8 w-8" key="compass" />,
+    <Target className="h-8 w-8" key="target" />,
+    <Lightbulb className="h-8 w-8" key="lightbulb" />,
+    <Workflow className="h-8 w-8" key="workflow" />,
+    <Sparkles className="h-8 w-8" key="sparkles" />,
+    <Layers className="h-8 w-8" key="layers" />,
+  ];
+
+  const iconBySlug: Record<string, JSX.Element> = {
+    "decision-making": <Target className="h-8 w-8" />,
+    "systems-thinking": <Network className="h-8 w-8" />,
+    strategy: <Compass className="h-8 w-8" />,
+    psychology: <Brain className="h-8 w-8" />,
+    productivity: <Workflow className="h-8 w-8" />,
+    creativity: <Sparkles className="h-8 w-8" />,
+    learning: <BookOpen className="h-8 w-8" />,
+    general: <Lightbulb className="h-8 w-8" />,
+    "general-thinking": <Lightbulb className="h-8 w-8" />,
+  };
+
+  const getCategoryIcon = (slug: string, idx: number) => iconBySlug[slug] ?? categoryIcons[idx % categoryIcons.length];
 
   return (
     <div className="relative overflow-hidden bg-[#050f1a] text-white">
@@ -191,18 +227,27 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <section id="benefits" className="mt-20 space-y-6">
-          <h1 className="text-center font-display text-3xl font-semibold text-white md:text-4xl mb-4">Unlock Clearer Thinking</h1>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {benefits.map((benefit) => (
-              <div
-                key={benefit.title}
-                className="overflow-hidden rounded-2xl border border-[#1e3442] bg-[#0f202d]/80 p-5 shadow-[0_16px_50px_rgba(0,0,0,0.35)]"
-              >
-                <h3 className="font-semibold text-white">{benefit.title}</h3>
-                <p className="mt-2 text-sm text-slate-400">{benefit.desc}</p>
-              </div>
-            ))}
+        <section id="categories" className="mt-20 space-y-6">
+          <h1 className="text-center font-display text-3xl font-semibold text-white md:text-4xl mb-4">Mental Model Categories</h1>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {categories.map((category, idx) => {
+              const color = tagPalette[idx % tagPalette.length];
+              return (
+                <Link
+                  key={category.id}
+                  href={`/library?category=${category.slug}`}
+                  className="group block rounded-2xl border border-[#1e3442] bg-[#0f202d]/80 p-5 shadow-[0_16px_50px_rgba(0,0,0,0.35)] transition duration-300 hover:-translate-y-1 hover:border-accent/70 hover:bg-[#162e41]/80 hover:shadow-[0_28px_70px_rgba(46,160,225,0.25)]"
+                >
+                  <div
+                    className={`mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-accent ${color}`}
+                  >
+                    {getCategoryIcon(category.slug, idx)}
+                  </div>
+                  <h3 className="font-semibold text-white">{category.name}</h3>
+                  <p className="mt-1 text-xs text-slate-400 group-hover:text-slate-300">Explore models in this category</p>
+                </Link>
+              );
+            })}
           </div>
         </section>
 
@@ -250,25 +295,6 @@ const howItWorks = [
   },
 ];
 
-const benefits = [
-  {
-    title: "Decision Clarity",
-    desc: "Navigate complexity with proven frameworks for better outcomes.",
-  },
-  {
-    title: "Structured Knowledge",
-    desc: "Organize insights with tags, TOC, and clean typography.",
-  },
-  {
-    title: "Audio-First Consumption",
-    desc: "Learn anywhere with audio-ready summaries for every model.",
-  },
-  {
-    title: "Creative Problem-Solving",
-    desc: "Apply diverse models to challenging problems confidently.",
-  },
-];
-
 const statusLabel = (status: string | null) => {
   switch (status) {
     case "ready":
@@ -284,4 +310,18 @@ function truncateWords(text: string, limit: number) {
   const words = text.split(/\s+/);
   if (words.length <= limit) return text;
   return words.slice(0, limit).join(" ") + "...";
+}
+
+function buildCategoryMap(categories: { slug: string; name: string | null }[]) {
+  const map = new Map<string, string>();
+  for (const c of categories) {
+    const name = c.name ?? c.slug;
+    const slug = c.slug ?? "";
+    map.set(slug, name);
+    const primary = slug.split("-")[0];
+    if (primary && !map.has(primary)) map.set(primary, name);
+    const normalized = slug.replace(/[^a-z0-9]/gi, "");
+    if (normalized && !map.has(normalized)) map.set(normalized, name);
+  }
+  return map;
 }

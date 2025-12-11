@@ -10,9 +10,9 @@ import type { Category } from "@/lib/categories";
 import type { Tag as TagRecord } from "@/lib/tags";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Pill } from "@/components/ui/pill";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { colorForSlug } from "@/components/lib/color";
 
 type FilterType = "category" | "tag" | "status" | null;
 
@@ -54,8 +54,6 @@ export function AdminModelsClient({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const categoryMap = useMemo(() => new Map(categories.map((c) => [c.slug, c.name ?? c.slug])), [categories]);
-  const tagMap = useMemo(() => new Map(tags.map((t) => [t.id, t.name ?? t.id])), [tags]);
-
   const [searchInput, setSearchInput] = useState(initialSearchTerm);
   const [currentSearchTerm, setCurrentSearchTerm] = useState(initialSearchTerm);
   const [activeFilter, setActiveFilter] = useState<FilterType>(null);
@@ -282,7 +280,7 @@ export function AdminModelsClient({
         <>
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             {models.map((model) => (
-              <ModelCard key={model.id} model={model} tagMap={tagMap} categoryMap={categoryMap} />
+              <ModelCard key={model.id} model={model} categoryMap={categoryMap} />
             ))}
           </div>
           <AdminPagination
@@ -413,17 +411,16 @@ function AdminPagination({
 
 function ModelCard({
   model,
-  tagMap,
   categoryMap,
 }: {
   model: ModelRecord;
-  tagMap: Map<string, string>;
   categoryMap: Map<string, string | null>;
 }) {
   const summary = truncateWords(model.summary ?? "", 20);
-  const tagNames = (model.tags ?? []).map((id) => tagMap.get(id) || id);
-  const categoryName = model.category ? categoryMap.get(model.category) || model.category : "";
+  const normalizedSlug = (model.category ?? "").replace(/[^a-z0-9]/gi, "");
+  const categoryName = model.category ? categoryMap.get(model.category) || categoryMap.get(normalizedSlug) || model.category : "";
   const audioLabel = statusLabel(model.audio_status);
+  const badgeColor = colorForSlug(model.category ?? model.slug, tagPalette);
   return (
     <div className="group overflow-hidden rounded-2xl border border-[#1e3442] bg-[#0f202d]/80 shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur transition hover:-translate-y-1 hover:shadow-[0_24px_70px_rgba(46,160,225,0.25)]">
       <div className="relative h-[180px] w-full bg-[#0c1622]">
@@ -443,11 +440,11 @@ function ModelCard({
           {model.status ?? "draft"}
         </Badge>
       </div>
-      <div className="space-y-3 px-4 pb-8 pt-4">
+      <div className="space-y-3 px-4 pb-12 pt-4">
         <div className="flex items-start justify-between gap-2">
           <div>
             <h3 className="font-display text-lg font-semibold text-white group-hover:text-accent">{model.title}</h3>
-            <p className="mt-1 text-sm text-slate-300">{summary}</p>
+            <p className="mt-1 text-sm text-slate-400">{summary}</p>
           </div>
           <div className="flex gap-2">
             <IconButton href={`/admin/models/${model.slug}/edit`}>
@@ -459,15 +456,13 @@ function ModelCard({
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          {tagNames.map((tag, idx) => (
-            <Badge key={`${tag}-${idx}`} variant="outline" className={cn(tagPalette[idx % tagPalette.length])}>
-              {tag}
+          {categoryName && (
+            <Badge variant="outline" className={cn(badgeColor, "rounded-[4px]")}>
+              {categoryName}
             </Badge>
-          ))}
+          )}
         </div>
-        <div className="flex flex-wrap gap-2">
-          {categoryName && <Pill label={categoryName} />}
-        </div>
+        <div className="text-sm text-slate-400">{model.read_time ? `${model.read_time} min read` : "—"}</div>
       </div>
     </div>
   );

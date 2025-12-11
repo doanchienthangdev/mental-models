@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState, useCallback, useEffect, useRef, useState } from "react";
+import { useFormStatus } from "react-dom";
 import { Edit, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ type CategoryRowProps = {
 const initialState: UpdateState = { status: "idle" };
 
 export function CategoryRow({ category, updateAction, deleteAction }: CategoryRowProps) {
-  const [state, formAction] = useFormState(updateAction, initialState);
+  const [state, formAction] = useActionState(updateAction, initialState);
   const [toast, setToast] = useState<{ type: "loading" | "success" | "error"; message: string } | null>(null);
   const submitIntent = useRef<"update" | "delete">("update");
   const formRef = useRef<HTMLFormElement>(null);
